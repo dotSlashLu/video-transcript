@@ -29,14 +29,14 @@ Exit code 0 = ready, 1 = blocked on you, 2 = installer failure. The installer is
 ## Run
 
 ```bash
-./vsum <input>
+vsum <input>
 ```
 
 ## Decide what to run
 
 | Situation | Command |
 |---|---|
-| Default (you have a link or a file) | `./vsum "<url or path>"` |
+| Default (you have a link or a file) | `vsum "<url or path>"` |
 | You know it has burned-in subtitles | add `--method ocr` |
 | You know it is speech only | add `--method asr` |
 | Slides / screen recording, text everywhere | `--method ocr --full` |

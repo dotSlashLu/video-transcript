@@ -168,9 +168,9 @@ ASR 有时"看起来更差"：它把字幕精简掉的口语补了回来（"说�
 
 ## 给 agent 用
 
-`SKILL.md` 就是给 agent 读的方法论：怎么选通道、怎么读 JSON、怎么处理数字、怎么把文稿整理成"分清作者观点与事实"的总结。把仓库根目录指给 agent，它应该不用额外说明就能跑。
+`skill/` 就是给 agent 读的方法论：怎么选通道、怎么读 JSON、怎么处理数字、怎么把文稿整理成"分清作者观点与事实"的总结。把仓库根目录指给 agent，它应该不用额外说明就能跑。
 
-建议把 `SKILL.md` 复制或软链到你的 agent 技能目录。
+用 `./install.sh --skill-dir <你的技能目录>/video-transcript` 装成技能；Shrimp 里用 `shrimp skill install <repo>/skill`。
 
 ## 设计取舍
 
@@ -202,7 +202,7 @@ cli/vsub.py         逐帧 OCR → 字幕段（相似度归并 + 多数票）
 cli/asrsplit.py     字级 ASR → 句级时间轴
 cli/fetch_video.mjs 通过 Chrome DevTools Protocol 解析视频直链
 cli/probe_speech.swift  诊断：本机支持/已安装的语音语言
-SKILL.md            agent 方法论
+skill/SKILL.md      agent 方法论（可安装的技能目录）
 ```
 
 ## 许可

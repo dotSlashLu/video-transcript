@@ -171,9 +171,9 @@ ASR sometimes looks *worse* than it is: it restores spoken words the subtitles t
 
 ## Agent integration
 
-`SKILL.md` is the methodology an agent should follow: how to choose a channel, how to read the JSON, how to handle the number problem, and how to turn a transcript into a summary that separates the speaker's claims from facts. Point your agent at the repo root and it should be able to run the tool without further instructions.
+`skill/` is the methodology an agent should follow: how to choose a channel, how to read the JSON, how to handle the number problem, and how to turn a transcript into a summary that separates the speaker's claims from facts. Point your agent at the repo root and it should be able to run the tool without further instructions.
 
-Recommended: copy or symlink `SKILL.md` into your agent's skills directory.
+Install it as a skill: `./install.sh --skill-dir <your-skills-dir>/video-transcript`, or for Shrimp: `shrimp skill install <repo>/skill`.
 
 ## Design notes
 
@@ -205,7 +205,7 @@ cli/vsub.py          frame OCR → subtitle segments (similarity merge, majority
 cli/asrsplit.py      word-level ASR → sentence timeline
 cli/fetch_video.mjs  resolve media URLs through Chrome DevTools Protocol
 cli/probe_speech.swift  diagnostic: supported / installed speech locales
-SKILL.md             agent methodology
+skill/SKILL.md       agent methodology (installable skill folder)
 ```
 
 ## License

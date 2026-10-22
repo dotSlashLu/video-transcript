@@ -145,14 +145,13 @@ fi
 
 # ---------- 7. skill for the agent ----------
 if [ -n "$SKILL_DIR" ]; then
-  if [ -f "$REPO/SKILL.md" ]; then
-    mkdir -p "$SKILL_DIR/references"
-    cp "$REPO/SKILL.md" "$SKILL_DIR/SKILL.md"
-    cp "$REPO"/references/*.md "$SKILL_DIR/references/" 2>/dev/null || true
+  if [ -f "$REPO/skill/SKILL.md" ]; then
+    mkdir -p "$SKILL_DIR"
+    cp -R "$REPO/skill/." "$SKILL_DIR/"
     record skill ok "$SKILL_DIR"
-    fixed "installed SKILL.md + references into $SKILL_DIR"
+    fixed "installed skill/ (SKILL.md + references) into $SKILL_DIR"
   else
-    record skill failed "SKILL.md missing from repo"
+    record skill failed "skill/SKILL.md missing from repo"
   fi
 else
   record skill skipped "no --skill-dir given (skill not installed for the agent)"
