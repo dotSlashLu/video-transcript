@@ -2,9 +2,12 @@
 # install.sh — idempotent installer for video-transcript.
 #
 # Designed to be run by an agent, not a human:
-#   ./install.sh --json     -> one JSON object on stdout, progress on stderr
-#   ./install.sh --yes      -> also install missing Homebrew packages without asking
-#   ./install.sh --link     -> symlink ./vsum into ~/.local/bin
+#   ./install.sh --json                     -> one JSON object on stdout, progress on stderr
+#   ./install.sh --yes                      -> install missing Homebrew packages without asking
+#   ./install.sh --link                     -> symlink ./vsum into ~/.local/bin
+#   ./install.sh --skill-dir <dir>          -> install SKILL.md + references into <dir>
+#                                              (pass your own skills directory, e.g.
+#                                               ~/.claude/skills/video-transcript)
 #
 # Exit codes: 0 = ready, 1 = needs user action, 2 = failed.
 set -uo pipefail
@@ -12,16 +15,19 @@ set -uo pipefail
 JSON=0
 ASSUME_YES=0
 DO_LINK=0
-for arg in "$@"; do
-  case "$arg" in
+SKILL_DIR=""
+while [ $# -gt 0 ]; do
+  case "$1" in
     --json) JSON=1 ;;
     --yes|-y) ASSUME_YES=1 ;;
     --link) DO_LINK=1 ;;
+    --skill-dir) SKILL_DIR="${2:-}"; shift ;;
     -h|--help)
       sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
       exit 0 ;;
-    *) echo "unknown flag: $arg" >&2; exit 2 ;;
+    *) echo "unknown flag: $1" >&2; exit 2 ;;
   esac
+  shift
 done
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
@@ -120,12 +126,36 @@ else
   record speech skipped "probe_speech not built"
 fi
 
-# ---------- 6. optional symlink ----------
+# ---------- 6. CLI on PATH ----------
 if [ "$DO_LINK" -eq 1 ]; then
   mkdir -p "$HOME/.local/bin"
   ln -sf "$REPO/vsum" "$HOME/.local/bin/vsum"
-  record link ok "$HOME/.local/bin/vsum"
-  fixed "symlinked vsum into ~/.local/bin (add it to PATH if needed)"
+  case ":$PATH:" in
+    *":$HOME/.local/bin:"*)
+      record cli ok "$HOME/.local/bin/vsum (on PATH)" ;;
+    *)
+      record cli warn "$HOME/.local/bin/vsum — not on PATH"
+      need "$HOME/.local/bin is not on PATH, so 'vsum' will not resolve" \
+           "export PATH=\"\$HOME/.local/bin:\$PATH\"  # or symlink $REPO/vsum into a bin dir already on PATH" ;;
+  esac
+  fixed "symlinked vsum into ~/.local/bin"
+else
+  record cli ok "$REPO/vsum (run via ./vsum or use --link)"
+fi
+
+# ---------- 7. skill for the agent ----------
+if [ -n "$SKILL_DIR" ]; then
+  if [ -f "$REPO/SKILL.md" ]; then
+    mkdir -p "$SKILL_DIR/references"
+    cp "$REPO/SKILL.md" "$SKILL_DIR/SKILL.md"
+    cp "$REPO"/references/*.md "$SKILL_DIR/references/" 2>/dev/null || true
+    record skill ok "$SKILL_DIR"
+    fixed "installed SKILL.md + references into $SKILL_DIR"
+  else
+    record skill failed "SKILL.md missing from repo"
+  fi
+else
+  record skill skipped "no --skill-dir given (skill not installed for the agent)"
 fi
 
 # ---------- report ----------
@@ -154,8 +184,12 @@ report = {
     "checks": checks,
     "fixed": fixed,
     "needs_user": needs,
-    "next": "./vsum <url-or-file>" if ready else "resolve needs_user, then rerun ./install.sh --json",
+    "skill_installed": any(c["name"] == "skill" and c["status"] == "ok" for c in checks),
+    "next": ("./vsum <url-or-file>" if ready
+             else "resolve needs_user, then rerun ./install.sh --json"),
 }
+if ready and not report["skill_installed"]:
+    report["hint"] = "CLI works; rerun with --skill-dir <your skills dir> to install the agent skill"
 if as_json == "1":
     print(json.dumps(report, ensure_ascii=False, indent=2))
 else:
@@ -170,6 +204,8 @@ else:
             if n["command"]:
                 print(f"    $ {n['command']}")
     print(f"\n{'Ready.' if ready else 'Not ready.'}  {report['next']}")
+    if ready and not report["skill_installed"]:
+        print("  hint: rerun with --skill-dir <your skills dir> to install the agent skill")
 
 sys.exit(0 if ready else 1)
 PY

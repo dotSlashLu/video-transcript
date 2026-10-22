@@ -22,14 +22,22 @@ Give it a Xiaohongshu link, a YouTube file, a screen recording, or a podcast epi
 Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 
 > Install `video-transcript` from `https://github.com/dotSlashLu/video-transcript`. Clone it wherever
-> you keep tools, run `./install.sh --json` from the repo root, and act on every entry in
-> `needs_user` — ask me before running anything that needs sudo. Rerun until `ready` is true,
-> then run `./vsum <a sample link or file>` and report its `method`, `chars` and `warnings`.
+> you keep tools, then do three things:
+>
+> 1. **Dependencies + build** — `./install.sh --json`, and resolve every entry in `needs_user`
+>    (ask me before running anything that needs sudo). Rerun until `ready` is true.
+> 2. **Make the CLI resolvable** — `./install.sh --link`, or symlink `./vsum` into a bin directory
+>    already on your PATH.
+> 3. **Install the skill for yourself** — `./install.sh --skill-dir <your-skills-dir>/video-transcript`,
+>    pointing at the directory you actually load skills from.
+>
+> Finish by running `./vsum <a sample link or file>` and reporting its `method`, `chars` and `warnings`.
 
-Or, if you just want it done:
+All three in one line (fill in your own skills directory):
 
 ```bash
-git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcript && ./install.sh --yes --link
+git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcript \
+  && ./install.sh --yes --link --skill-dir "<your-skills-dir>/video-transcript"
 ```
 
 `install.sh` is idempotent, needs no input, and prints exactly **one JSON object** on stdout (progress goes to stderr). It separates what it fixed from what only you can do:

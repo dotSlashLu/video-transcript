@@ -11,8 +11,13 @@ A 7-minute 1080p video becomes 2,000 characters of timestamped text in **10–30
 
 ```bash
 git clone https://github.com/dotSlashLu/video-transcript.git   # anywhere you keep tools
-cd video-transcript && ./install.sh --json
+cd video-transcript
+./install.sh --json --link --skill-dir <your-skills-dir>/video-transcript
 ```
+
+`--link` symlinks `vsum` into `~/.local/bin` (warns if that is not on your PATH).
+`--skill-dir` copies this skill and its references into your own skills directory, so a later
+`git pull` does not silently change the instructions you were given.
 
 Read the JSON. If `ready` is false:
 
