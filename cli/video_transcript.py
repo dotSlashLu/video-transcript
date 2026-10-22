@@ -22,15 +22,12 @@ TRANSCRIBE = BIN_DIR / "transcribe"
 VSUB = CLI_DIR / "vsub.py"
 ASRSPLIT = CLI_DIR / "asrsplit.py"
 AUTOBAND = CLI_DIR / "autoband.py"
-FETCH = CLI_DIR / "fetch_video.mjs"
 
-UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
 ASR_LOCALE = {"zh-hans": "zh-CN", "zh-hant": "zh-TW", "zh": "zh-CN", "yue": "zh-yue",
               "en": "en-US", "ja": "ja-JP", "ko": "ko-KR", "fr": "fr-FR",
               "de": "de-DE", "es": "es-ES", "it": "it-IT", "pt": "pt-BR"}
 
-EXIT_ARGS, EXIT_FETCH, EXIT_RECOGNIZE, EXIT_DEPS = 2, 3, 4, 5
+EXIT_ARGS, EXIT_RECOGNIZE, EXIT_DEPS = 2, 4, 5
 
 
 def die(msg, code=EXIT_RECOGNIZE):
@@ -72,17 +69,6 @@ def probe(path):
         "codec": (v or {}).get("codec_name") or (a or {}).get("codec_name"),
         "has_video": v is not None, "has_audio": a is not None,
     }
-
-
-def download(url, referer, dest):
-    cmd = ["curl", "-sL", "--fail", "-o", str(dest), "-H", f"User-Agent: {UA}"]
-    if referer:
-        cmd += ["-H", f"Referer: {referer}"]
-    cmd.append(url)
-    r = run(cmd)
-    if r.returncode != 0 or not dest.exists() or dest.stat().st_size < 10000:
-        return False, (r.stderr or "").strip()[:300]
-    return True, ""
 
 
 def sample_frames(video, dur, work, n=5):
@@ -182,7 +168,7 @@ def main():
     ap = argparse.ArgumentParser(
         prog="video-transcript",
         description="Transcribe any video/audio on macOS (Vision OCR + SpeechAnalyzer). No API keys, no network for recognition.")
-    ap.add_argument("input", help="web page URL, direct media URL, or local video/audio file")
+    ap.add_argument("input", help="local video or audio file")
     ap.add_argument("--method", choices=["auto", "ocr", "asr"], default="auto",
                     help="force a channel (default: auto-detect burned-in subtitles)")
     ap.add_argument("--fps", type=float, default=1.0, help="frame sampling rate for OCR (default 1)")
@@ -193,7 +179,7 @@ def main():
                     help="dictation = nicer punctuation, ~3x slower")
     ap.add_argument("--asr-locale", default=None, help="force SpeechTranscriber locale, e.g. zh-CN")
     ap.add_argument("--format", choices=["json", "text"], default="json")
-    ap.add_argument("--keep-work", action="store_true", help="keep downloaded media and intermediate frames")
+    ap.add_argument("--keep-work", action="store_true", help="keep intermediate frames and extracted audio")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--version", action="version", version=f"video-transcript {VERSION}")
     a = ap.parse_args()
@@ -206,31 +192,14 @@ def main():
     work = Path(tempfile.mkdtemp(prefix="video-transcript-"))
     try:
         # ---------- acquire media ----------
-        src, title, referer = a.input, "", ""
+        src = a.input
         if re.match(r"^https?://", src):
-            if src.lower().split("?")[0].endswith((".mp4", ".m4v", ".mov", ".webm", ".mp3", ".m4a", ".wav")):
-                video = work / "media"
-                ok, err = download(src, "", video)
-                if not ok:
-                    die("download failed: " + err, EXIT_FETCH)
-                title = Path(src.split("?")[0]).stem
-            else:
-                log("[video-transcript] resolving media via Chrome (CDP)…")
-                r = run(["node", str(FETCH), src])
-                if r.returncode != 0 or not r.stdout.strip():
-                    die("could not resolve media from page: " + (r.stderr or "")[:400], EXIT_FETCH)
-                info = json.loads(r.stdout.strip().splitlines()[-1])
-                title = info.get("title", "")
-                referer = "/".join(info.get("pageUrl", "").split("/")[:3]) + "/"
-                video = work / "media"
-                ok, err = download(info["video"], referer, video)
-                if not ok:
-                    die("media download failed (login/cookie required?): " + err, EXIT_FETCH)
-        else:
-            video = Path(src).expanduser().resolve()
-            if not video.exists():
-                die(f"file not found: {video}", EXIT_ARGS)
-            title = video.stem
+            die("this tool transcribes local files. Download the media first, "
+                "then pass the file path.", EXIT_ARGS)
+        video = Path(src).expanduser().resolve()
+        if not video.exists():
+            die(f"file not found: {video}", EXIT_ARGS)
+        title = video.stem
 
         meta = probe(video)
         dur = meta.get("duration") or 0

@@ -4,7 +4,9 @@
 
 [English](README.md) · 简体中文
 
-丢一个小红书链接、本地录屏、还是播客音频进来，拿回一份可以引用、可以检索、可以总结的文稿。不上传、不要 API key、不按分钟计费。
+丢一个本地视频或音频文件进来——录屏、下载好的讲座、播客都行——拿回一份可以引用、可以检索、可以总结的文稿。不上传、不要 API key、不按分钟计费。
+
+它只吃文件，不吃链接。把网页变成文件是另一件事（交给你的浏览器或 agent）；本工具从文件落盘那一刻才开始工作。
 
 - **两条通道自动选。** 有硬字幕走苹果 Vision OCR，没字幕走苹果 SpeechAnalyzer。
 - **7 分钟视频 10–30 秒。** 不租 GPU、不排队。
@@ -64,7 +66,7 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 | 1 | 卡在 `needs_user` |
 | 2 | 安装器本身出错 |
 
-给 agent 的提示：`xcode-select --install` 会弹 GUI 窗口，这一项要交给用户；`brew install ffmpeg` 可以自己跑（或直接传 `--yes`）。node 是可选的，只有从网页取流时才需要。
+给 agent 的提示：`xcode-select --install` 会弹 GUI 窗口，这一项要交给用户；`brew install ffmpeg` 可以自己跑（或直接传 `--yes`）。
 
 ---
 
@@ -80,7 +82,7 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 |---|---|
 | 系统 | macOS 26+（需要 SpeechAnalyzer）。只用 OCR 的话老系统也能跑。 |
 | 工具链 | Xcode Command Line Tools（`swiftc`） |
-| 运行时 | `ffmpeg`、`python3`、`node`（node 仅用于抓网页） |
+| 运行时 | `ffmpeg`、`python3` |
 
 ```bash
 ./install.sh           # 检查依赖、编译，并把运行时装出仓库
@@ -100,10 +102,7 @@ make doctor            # 查看本机支持/已安装哪些语音语言
 ## 用法
 
 ```bash
-# 网页（借你已登录的 Chrome 解析视频直链）
-video-transcript "https://xhslink.cn/o/8p8U68Y44ib"
-
-# 本地文件
+# 视频文件
 video-transcript ~/Movies/lecture.mp4
 
 # 纯音频
@@ -189,14 +188,14 @@ ASR 有时"看起来更差"：它把字幕精简掉的口语补了回来（"说�
 - **1 fps 而不是更高。** 字幕停留 2–4 秒；帧率越高只会把"逐字出现"的中间态也采进来。
 - **按相似度合并，不按完全相等。** 逐字动画会让同一句产生多个变体（"开了一家"/"开了—家"），`difflib` ≥0.82 归并，再用多数票定稿。
 - **水印只在判定时剔除，不删正文。** 删正文没意义——读总结的模型自然会忽略一直重复的那句；但水印留在**探测**里，会让没字幕的视频看起来像有字幕，直接选错通道。
-- **取流走用户自己的 Chrome。** 小红书、公众号这类站点需要真实登录态，静态抓取只会撞登录墙；签名直链几分钟就过期，必须立刻下载。
+- **不做取流。** 把网页变成文件是另一类问题，失败模式完全不同（登录、签名过期、DRM）。把它挡在外面，这个工具就只剩一件事，也不依赖浏览器。
 
 ## 已知限制
 
 - 语音通道的数字和专有名词不可靠（见 `warnings`），引用前核对。
 - 图表、K 线、画面上的数字不会被读取；需要时 `--full`，或单独让视觉模型看图。
 - 既没字幕又没音轨 → 无内容可提取。
-- DRM 视频（Netflix 等）不支持；`blob:` 流拿不到直链。
+- DRM 视频（Netflix 等）不在范围内；先用其它方式拿到文件。
 - 语言需有对应语音模型，`make doctor` 可查。
 - 艺术字、竖排字幕、花哨排版的识别率低于干净的讲解字幕。
 
@@ -204,14 +203,13 @@ ASR 有时"看起来更差"：它把字幕精简掉的口语补了回来（"说�
 
 ```
 install.sh          给 agent 跑的安装器（幂等，--json / --yes / --prefix / --skill-dir）
-video-transcript    入口 —— ./video-transcript <链接|文件>
-cli/video_transcript.py         主流程：取流 → 探测 → 选通道 → 识别 → 报告
+video-transcript    入口 —— ./video-transcript <文件>
+cli/video_transcript.py         主流程：探测 → 选通道 → 识别 → 报告
 cli/vocr.swift      Vision OCR 命令行（批量、并行、裁剪、放大、输出 bbox）
 cli/transcribe.swift SpeechAnalyzer 转写（transcribe | dictation）
 cli/autoband.py     字幕带探测 + 水印剔除
 cli/vsub.py         逐帧 OCR → 字幕段（相似度归并 + 多数票）
 cli/asrsplit.py     字级 ASR → 句级时间轴
-cli/fetch_video.mjs 通过 Chrome DevTools Protocol 解析视频直链
 cli/probe_speech.swift  诊断：本机支持/已安装的语音语言
 skill/SKILL.md      agent 方法论（可安装的技能目录）
 ```

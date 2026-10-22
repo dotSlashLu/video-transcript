@@ -103,13 +103,6 @@ else
   need "python3 is required for the orchestrator" "xcode-select --install"
 fi
 
-if command -v node >/dev/null 2>&1; then
-  record node ok "$(node -v 2>/dev/null)"
-else
-  record node warn "not installed — only needed to resolve media from web pages"
-  fixed "local files and direct media URLs still work without node"
-fi
-
 # ---------- 4. build ----------
 if [ "${NEEDS_SWIFT:-0}" -eq 0 ]; then
   log "compiling recognizers…"

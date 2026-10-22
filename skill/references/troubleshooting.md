@@ -22,17 +22,6 @@ The probe requires ≥60% of sampled frames to contain non-watermark text in the
 **Watermark text appears in the transcript.**
 Expected and harmless: the probe strips watermarks only for channel selection, not from output. A summarizer ignores a line that repeats across the whole file. If you want it gone from the artefacts, crop the band manually with `--full` off and inspect `detection.watermarks`.
 
-## Fetching
-
-**`could not resolve media from page`**
-The page is not a video page, requires login, or the CDP proxy is not running. Open the page in the user's own Chrome first; the tool reuses that session. Check the proxy with `curl -s http://localhost:3456/targets`.
-
-**`media download failed (login/cookie required?)`**
-Xiaohongshu URLs carry `sign`/`t` parameters that expire in minutes. Rerun the command rather than reusing an old URL.
-
-**Only `blob:` sources are listed.**
-The player uses MSE segments with no single file. Not supported — sample frames via screenshots instead.
-
 ## Recognition
 
 **ASR returns an empty transcript.**

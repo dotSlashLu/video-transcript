@@ -3,9 +3,7 @@
 ## Data flow
 
 ```
-inputs: web page ──fetch_video.mjs (Chrome/CDP)──▶ direct media URL
-        direct URL ──curl (with Referer)─────────▶ local temp file
-        local file ─────────────────────────────▶ local temp file
+input: local video / audio file ────────────▶ temp working dir
                                                         │
                                             ffprobe ────┤ has video? has audio? duration?
                                                         │
@@ -67,7 +65,7 @@ The subtitle probe is trying to answer one question: *is there text that changes
 
 | Step | OCR | ASR |
 |---|---|---|
-| Acquire | 3.5 s (CDP + 48 MB download) | same |
+| Acquire | — (file is already local) | same |
 | Probe | 0.3 s | — |
 | Extract | 5.7 s (432 jpegs) | 0.8 s (wav) |
 | Recognize | 19.5 s | 6.8 s |

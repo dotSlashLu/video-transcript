@@ -1,11 +1,13 @@
 ---
 name: video-transcript
-description: Transcribe and summarize a video or audio file on macOS using Apple's own engines — Vision OCR reads burned-in subtitles, SpeechAnalyzer transcribes speech — with no API keys, no uploads and no per-minute cost. Accepts local files, direct media URLs, and login-gated web pages (Xiaohongshu, WeChat, most Chinese platforms). Use when asked to summarize a video, extract a transcript or subtitles, or analyze what someone said in a link.
+description: Transcribe a local video or audio file on macOS using Apple's own engines — Vision OCR reads burned-in subtitles, SpeechAnalyzer transcribes speech. No API keys, no uploads, no per-minute cost. Takes a file path, not a URL. Use when asked to transcribe, quote or summarize a video or audio file already on this machine.
 ---
 
-# Video → transcript → summary
+# Video → transcript
 
-A 7-minute 1080p video becomes 2,000 characters of timestamped text in **10–30 seconds**, entirely on this Mac. The point is not raw transcription — it is being able to *reason about* a video: quote it, check it, summarize it.
+A 7-minute 1080p file becomes 2,000 characters of timestamped text in **10–30 seconds**, entirely on this Mac. The value is not raw transcription — it is being able to *reason about* a video: quote it, check it, summarize it.
+
+**This tool works on files.** It does not fetch anything from the network. If what you have is a link, obtain the media file first, then point this tool at it.
 
 ## Install (first run only)
 
@@ -18,27 +20,23 @@ cd video-transcript
 The installer copies the runtime into `~/.local/share/video-transcript` and writes a `video-transcript`
 launcher into `~/.local/bin` (it warns if that directory is not on your PATH). The clone is
 disposable afterwards.
-`--skill-dir` copies this skill and its references into your own skills directory, so a later
-`git pull` does not silently change the instructions you were given.
 
 Read the JSON. If `ready` is false:
 
 - every entry in `needs_user` carries a `command` — run it yourself, except when it needs sudo or a GUI (`xcode-select --install` opens a dialog: hand that one to the user);
 - rerun `./install.sh --json` until `ready` is true.
 
-Exit code 0 = ready, 1 = blocked on you, 2 = installer failure. The installer is idempotent; running it again is always safe.
+Exit codes: 0 = ready, 1 = blocked on you, 2 = installer failure. The installer is idempotent; running it again is always safe.
 
 ## Run
 
 ```bash
-video-transcript <input>
+video-transcript <file>
 ```
-
-## Decide what to run
 
 | Situation | Command |
 |---|---|
-| Default (you have a link or a file) | `video-transcript "<url or path>"` |
+| Default | `video-transcript ~/Movies/lecture.mp4` |
 | You know it has burned-in subtitles | add `--method ocr` |
 | You know it is speech only | add `--method asr` |
 | Slides / screen recording, text everywhere | `--method ocr --full` |
@@ -66,7 +64,7 @@ Act on warnings, don't just report them:
 - `ASR mis-hears numbers and homophones` → this run is speech-only. See "Numbers" below.
 - `no audio track` → OCR is the only option; ASR will fail.
 
-If `subs` came out empty or as one line repeating for the whole video, the channel was wrong. Rerun with the other method.
+If `subs` came out empty or as one line repeating for the whole file, the channel was wrong. Rerun with the other method.
 
 ## Numbers are the failure mode
 
@@ -82,10 +80,10 @@ Rules:
 
 Do not paste the transcript back. Build a skeleton first, then write prose over it.
 
-1. **Segment by time.** Use timestamps (or platform chapters, if `meta.json` has them) to cut the talk into 3–6 movements. This keeps structure the speaker actually intended.
+1. **Segment by time.** Use timestamps to cut the talk into 3–6 movements. This keeps structure the speaker actually intended.
 2. **Extract the spine**: for each movement, one *claim* + the *evidence* used + the *conclusion drawn*. Claims without evidence are opinions — label them as such.
 3. **Separate fact from opinion.** Figures, dates, named events are facts (and must survive the number check). Forecasts, analogies, judgments are the speaker's views — attribute them ("作者认为…"), never adopt them as the answer.
-4. **Keep the reasoning, drop the filler.** "老规矩先赞后看", channel plugs, repetitions — delete. An idea that only appears once but carries the argument — keep.
+4. **Keep the reasoning, drop the filler.** "老规矩先赞后看", channel plugs, repetitions — delete. An idea that appears once but carries the argument — keep.
 5. **Flag what breaks it.** Most finance/tech talks have one load-bearing assumption. Name it, and say what would falsify it. This is worth more than a longer summary.
 6. **Quote with timestamps** for anything you would be challenged on: `（04:53）`.
 
@@ -103,9 +101,9 @@ The transcript is a working artifact, not the deliverable. Unless the user asked
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `could not resolve media from page` | page needs login, or isn't a video page | open it in the user's Chrome first; the tool reuses their session |
-| `media download failed` | signed URL expired / referer missing | rerun; URLs from Xiaohongshu expire in minutes |
-| `missing compiled binaries` | `make` never ran | `make` |
+| `this tool transcribes local files` | a URL was passed | download the media first, then pass the path |
+| `file not found` | wrong path, or `~` not expanded | use an absolute path |
+| `missing compiled binaries` | `make` / `install.sh` never ran | rerun `./install.sh --json` |
 | ASR returns nothing | no speech, or wrong locale | `--asr-locale`, or `--method ocr` |
 | OCR text includes watermarks | watermark inside the subtitle band | harmless for summarizing — the model ignores repeated lines; the probe already strips them for channel selection |
 | Video is a lecture with slides | text fills the frame | `--method ocr --full` |

@@ -4,7 +4,9 @@
 
 English · [简体中文](README.zh-CN.md)
 
-Give it a Xiaohongshu link, a YouTube file, a screen recording, or a podcast episode. It gives back a transcript you can quote, search and summarize — without uploading a single byte, without an API key, and without paying per minute.
+Point it at a local file — a screen recording, a downloaded talk, a podcast episode. It gives back a transcript you can quote, search and summarize — without uploading a single byte, without an API key, and without paying per minute.
+
+It takes files, not URLs. Turning a page into a file is your business (or your agent's); this tool starts once there is something on disk.
 
 - **Two channels, picked automatically.** Burned-in subtitles → Apple Vision OCR. No subtitles → Apple SpeechAnalyzer.
 - **10–30 seconds for a 7-minute video.** No GPU rental, no queue.
@@ -67,7 +69,7 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 | 1 | blocked on `needs_user` |
 | 2 | installer itself failed |
 
-Notes for agents: `xcode-select --install` opens a GUI prompt, so hand that one to the user; `brew install ffmpeg` you can run yourself (or pass `--yes`). Node is optional — only used to resolve media from web pages.
+Notes for agents: `xcode-select --install` opens a GUI prompt, so hand that one to the user; `brew install ffmpeg` you can run yourself (or pass `--yes`).
 
 ---
 
@@ -83,7 +85,7 @@ So the tool does the cheap, precise thing: sample frames, read only the subtitle
 |---|---|
 | OS | macOS 26+ (SpeechAnalyzer). OCR alone works on older versions. |
 | Toolchain | Xcode Command Line Tools (`swiftc`) |
-| Runtime | `ffmpeg`, `python3`, `node` (node only for fetching web pages) |
+| Runtime | `ffmpeg`, `python3` |
 
 ```bash
 ./install.sh           # checks deps, compiles, copies the runtime out of the repo
@@ -104,10 +106,7 @@ First run in a new language downloads that speech model once (a few seconds). Af
 ## Usage
 
 ```bash
-# a web page (uses your logged-in Chrome to resolve the media URL)
-video-transcript "https://xhslink.cn/o/8p8U68Y44ib"
-
-# a local file
+# a video file
 video-transcript ~/Movies/lecture.mp4
 
 # audio only
@@ -194,14 +193,14 @@ Install it as a skill: `./install.sh --skill-dir <your-skills-dir>/video-transcr
 - **1 fps, not more.** Subtitles stay 2–4 s. Higher rates only capture the "typewriter" intermediate states and inject garbage.
 - **Merging by similarity, not equality.** Word-by-word animation produces variants of the same line ("开了一家" / "开了—家"); `difflib` ≥0.82 merges them and a majority vote picks the spelling.
 - **Watermarks are stripped for the channel decision, never from the text.** Removing them from output is pointless — a summarizer ignores a line that repeats forever — but leaving them in the *probe* makes subtitle-less videos look subtitled.
-- **Media fetching goes through the user's Chrome.** Xiaohongshu, WeChat and friends need a real session; static scraping gets a login wall. Signed URLs expire in minutes, so download immediately.
+- **No fetching, on purpose.** Resolving a page into a file is a different problem with different failure modes (logins, signed URLs, DRM). Keeping it out leaves this tool with one job and no browser dependency.
 
 ## Limitations
 
 - Speech numbers and proper nouns are unreliable (see `warnings`). Verify before quoting.
 - Graphics, charts and on-screen figures are not read. Use `--full`, or ask a vision model about specific frames.
 - No subtitles **and** no audio → nothing to extract.
-- DRM streams (Netflix, Disney+) are out of scope; `blob:` MSE sources cannot be resolved.
+- DRM streams (Netflix, Disney+) are out of scope; download protected media before using this.
 - Speech models must exist for the language; `make doctor` shows what is installed.
 - Visual/live-action videos with stylized subtitles OCR worse than clean explainer typography.
 
@@ -209,14 +208,13 @@ Install it as a skill: `./install.sh --skill-dir <your-skills-dir>/video-transcr
 
 ```
 install.sh           agent-runnable installer (idempotent, --json, --yes, --prefix, --skill-dir)
-video-transcript     entry point — ./video-transcript <url|file>
-cli/video_transcript.py          orchestrator: acquire → probe → channel → recognize → report
+video-transcript     entry point — ./video-transcript <file>
+cli/video_transcript.py          orchestrator: probe → channel → recognize → report
 cli/vocr.swift       Vision OCR CLI (batch, parallel, crop, scale, bbox output)
 cli/transcribe.swift SpeechAnalyzer transcription (transcribe | dictation)
 cli/autoband.py      subtitle-band probe + watermark rejection
 cli/vsub.py          frame OCR → subtitle segments (similarity merge, majority vote)
 cli/asrsplit.py      word-level ASR → sentence timeline
-cli/fetch_video.mjs  resolve media URLs through Chrome DevTools Protocol
 cli/probe_speech.swift  diagnostic: supported / installed speech locales
 skill/SKILL.md       agent methodology (installable skill folder)
 ```
