@@ -65,16 +65,24 @@ else
   record macos warn "$VER < 26 (speech recognition unavailable, OCR still works)"
 fi
 
-# ---------- 2. swift toolchain ----------
+# ---------- 2. do we already have binaries? ----------
+PREBUILT=0
+if [ -x "$REPO/.build/vocr" ] && [ -x "$REPO/.build/transcribe" ] && [ -x "$REPO/.build/probe_speech" ]; then
+  PREBUILT=1
+fi
+
+# ---------- 3. swift toolchain (only needed when compiling from source) ----------
 if command -v swiftc >/dev/null 2>&1; then
   record swiftc ok "$(swiftc --version 2>/dev/null | head -1)"
+elif [ "$PREBUILT" -eq 1 ]; then
+  record swiftc ok "not needed (prebuilt binaries shipped in this package)"
 else
   record swiftc missing "not installed"
   need "Xcode Command Line Tools are required to compile the recognizers" "xcode-select --install"
   NEEDS_SWIFT=1
 fi
 
-# ---------- 3. runtime deps ----------
+# ---------- 4. runtime deps ----------
 if command -v ffmpeg >/dev/null 2>&1; then
   record ffmpeg ok "$(ffmpeg -version 2>/dev/null | head -1 | cut -d' ' -f3)"
 else
@@ -103,8 +111,10 @@ else
   need "python3 is required for the orchestrator" "xcode-select --install"
 fi
 
-# ---------- 4. build ----------
-if [ "${NEEDS_SWIFT:-0}" -eq 0 ]; then
+# ---------- 5. build ----------
+if [ "$PREBUILT" -eq 1 ]; then
+  record build ok "prebuilt binaries (.build)"
+elif [ "${NEEDS_SWIFT:-0}" -eq 0 ] && command -v make >/dev/null 2>&1; then
   log "compiling recognizers…"
   if make all >/dev/null 2>&1; then
     record build ok ".build/{vocr,transcribe,probe_speech}"
@@ -114,10 +124,11 @@ if [ "${NEEDS_SWIFT:-0}" -eq 0 ]; then
     need "compilation failed" "make all  # $ERR"
   fi
 else
-  record build skipped "swift toolchain missing"
+  record build failed "no prebuilt binaries, and no toolchain to compile them"
+  need "install Xcode Command Line Tools, or download a prebuilt release zip" "xcode-select --install"
 fi
 
-# ---------- 5. speech locales ----------
+# ---------- 6. speech locales ----------
 if [ -x "$REPO/.build/probe_speech" ]; then
   if "$REPO/.build/probe_speech" 2>/dev/null | grep -q "中文支持: supported=true installed=true"; then
     record speech ok "zh installed"
@@ -130,7 +141,7 @@ else
   record speech skipped "probe_speech not built"
 fi
 
-# ---------- 6. install the runtime ----------
+# ---------- 7. install the runtime ----------
 if [ "$DO_INSTALL" -eq 1 ]; then
   case "$PREFIX" in
     /|""|"$HOME") record install failed "refusing unsafe prefix: '$PREFIX'" ;;
@@ -165,7 +176,7 @@ else
   record install skipped "--no-install: use ./video-transcript from the repo"
 fi
 
-# ---------- 7. skill for the agent ----------
+# ---------- 8. skill for the agent ----------
 if [ -n "$SKILL_DIR" ]; then
   if [ -f "$REPO/skill/SKILL.md" ]; then
     mkdir -p "$SKILL_DIR"

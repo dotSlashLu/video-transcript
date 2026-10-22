@@ -11,15 +11,21 @@ A 7-minute 1080p file becomes 2,000 characters of timestamped text in **10–30 
 
 ## Install (first run only)
 
+Prebuilt package — no compiler, no git:
+
 ```bash
-git clone https://github.com/dotSlashLu/video-transcript.git   # anywhere you keep tools
-cd video-transcript
-./install.sh --json --skill-dir <your-skills-dir>/video-transcript
+arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
+curl -fsSL -o /tmp/vt.zip \
+  "https://github.com/dotSlashLu/video-transcript/releases/latest/download/video-transcript-macos-$arch.zip"
+unzip -q /tmp/vt.zip -d /tmp/vt
+/tmp/vt/video-transcript/install.sh --json --skill-dir <your-skills-dir>/video-transcript
+rm -rf /tmp/vt
 ```
 
+From source instead (needs Xcode Command Line Tools): clone the repo and run the same `install.sh`.
+
 The installer copies the runtime into `~/.local/share/video-transcript` and writes a `video-transcript`
-launcher into `~/.local/bin` (it warns if that directory is not on your PATH). The clone is
-disposable afterwards.
+launcher into `~/.local/bin` (it warns if that directory is not on your PATH).
 
 Read the JSON. If `ready` is false:
 
