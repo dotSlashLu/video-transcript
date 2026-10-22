@@ -21,7 +21,7 @@ Give it a Xiaohongshu link, a YouTube file, a screen recording, or a podcast epi
 
 Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 
-> Install `video-transcript` from `<repo-url>`. Clone it to `~/tools/video-transcript`,
+> Install `video-transcript` from `https://github.com/dotSlashLu/video-transcript`. Clone it to `~/tools/video-transcript`,
 > run `./install.sh --json`, and act on every entry in `needs_user` — ask me before
 > running anything that needs sudo. Rerun until `ready` is true, then run
 > `./vsum <a sample link or file>` and report its `method`, `chars` and `warnings`.
@@ -29,7 +29,7 @@ Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 Or, if you just want it done:
 
 ```bash
-git clone <repo-url> ~/tools/video-transcript && ~/tools/video-transcript/install.sh --yes --link
+git clone https://github.com/dotSlashLu/video-transcript ~/tools/video-transcript && ~/tools/video-transcript/install.sh --yes --link
 ```
 
 `install.sh` is idempotent, needs no input, and prints exactly **one JSON object** on stdout (progress goes to stderr). It separates what it fixed from what only you can do:

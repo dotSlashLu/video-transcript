@@ -10,7 +10,7 @@ A 7-minute 1080p video becomes 2,000 characters of timestamped text in **10–30
 ## Install (first run only)
 
 ```bash
-git clone <repo-url> ~/tools/video-transcript && cd ~/tools/video-transcript
+git clone https://github.com/dotSlashLu/video-transcript ~/tools/video-transcript && cd ~/tools/video-transcript
 ./install.sh --json
 ```
 
