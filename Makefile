@@ -25,17 +25,17 @@ doctor: $(BUILD)/probe_speech
 
 # End-to-end smoke test: synthesize 2s of silence, run the ASR channel.
 test: all
-	@python3 cli/vsum.py --version
-	@ffmpeg -v error -f lavfi -i anullsrc=r=16000:cl=mono -t 2 -y /tmp/vsum-silence.wav
-	@python3 cli/vsum.py /tmp/vsum-silence.wav --format json --quiet \
+	@python3 cli/video_transcript.py --version
+	@ffmpeg -v error -f lavfi -i anullsrc=r=16000:cl=mono -t 2 -y /tmp/vt-silence.wav
+	@python3 cli/video_transcript.py /tmp/vt-silence.wav --format json --quiet \
 	  | python3 -c 'import json,sys; d=json.load(sys.stdin); print("smoke ok, channel =", d["method"])'
-	@rm -f /tmp/vsum-silence.wav
+	@rm -f /tmp/vt-silence.wav
 
 install:
 	./install.sh --yes
 
 version:
-	@python3 cli/vsum.py --version
+	@python3 cli/video_transcript.py --version
 
 clean:
 	rm -rf $(BUILD) out

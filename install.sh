@@ -6,7 +6,7 @@
 #   ./install.sh --yes                      -> install missing Homebrew packages without asking
 #   ./install.sh --prefix <dir>             -> where the runtime is copied
 #                                              (default ~/.local/share/video-transcript)
-#   ./install.sh --bin-dir <dir>            -> where the vsum launcher goes (default ~/.local/bin)
+#   ./install.sh --bin-dir <dir>            -> where the launcher goes (default ~/.local/bin)
 #   ./install.sh --no-install               -> build only, do not copy anything
 #   ./install.sh --skill-dir <dir>          -> install the agent skill into <dir>
 #                                              (e.g. ~/.claude/skills/video-transcript)
@@ -142,26 +142,26 @@ if [ "$DO_INSTALL" -eq 1 ]; then
   case "$PREFIX" in
     /|""|"$HOME") record install failed "refusing unsafe prefix: '$PREFIX'" ;;
     *)
-      if [ -d "$REPO/.build" ] && [ -f "$REPO/cli/vsum.py" ]; then
+      if [ -d "$REPO/.build" ] && [ -f "$REPO/cli/video_transcript.py" ]; then
         mkdir -p "$PREFIX"
         rm -rf "$PREFIX/cli" "$PREFIX/.build"
         cp -R "$REPO/cli" "$PREFIX/cli"
         cp -R "$REPO/.build" "$PREFIX/.build"
         rm -rf "$PREFIX/cli/__pycache__"
         mkdir -p "$BIN_DIR"
-        rm -f "$BIN_DIR/vsum"   # never write through a pre-existing symlink
-        cat > "$BIN_DIR/vsum" <<LAUNCHER
+        rm -f "$BIN_DIR/video-transcript"   # never write through a pre-existing symlink
+        cat > "$BIN_DIR/video-transcript" <<LAUNCHER
 #!/usr/bin/env bash
-exec python3 "$PREFIX/cli/vsum.py" "\$@"
+exec python3 "$PREFIX/cli/video_transcript.py" "\$@"
 LAUNCHER
-        chmod +x "$BIN_DIR/vsum"
+        chmod +x "$BIN_DIR/video-transcript"
         record install ok "$PREFIX"
         fixed "copied runtime into $PREFIX"
         case ":$PATH:" in
-          *":$BIN_DIR:"*) record cli ok "$BIN_DIR/vsum" ;;
+          *":$BIN_DIR:"*) record cli ok "$BIN_DIR/video-transcript" ;;
           *)
-            record cli warn "$BIN_DIR/vsum — $BIN_DIR is not on PATH"
-            need "$BIN_DIR is not on PATH, so 'vsum' will not resolve" \
+            record cli warn "$BIN_DIR/video-transcript — $BIN_DIR is not on PATH"
+            need "$BIN_DIR is not on PATH, so 'video-transcript' will not resolve" \
                  "export PATH=\"$BIN_DIR:\$PATH\"  # then reload your shell" ;;
         esac
       else
@@ -169,7 +169,7 @@ LAUNCHER
       fi ;;
   esac
 else
-  record install skipped "--no-install: use ./vsum from the repo"
+  record install skipped "--no-install: use ./video-transcript from the repo"
 fi
 
 # ---------- 7. skill for the agent ----------
@@ -213,7 +213,7 @@ report = {
     "fixed": fixed,
     "needs_user": needs,
     "skill_installed": any(c["name"] == "skill" and c["status"] == "ok" for c in checks),
-    "next": ("./vsum <url-or-file>" if ready
+    "next": ("./video-transcript <url-or-file>" if ready
              else "resolve needs_user, then rerun ./install.sh --json"),
 }
 if ready and not report["skill_installed"]:

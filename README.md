@@ -27,12 +27,12 @@ Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 > 1. **Dependencies + build** — `./install.sh --json`, and resolve every entry in `needs_user`
 >    (ask me before running anything that needs sudo). Rerun until `ready` is true.
 > 2. **Make the CLI resolvable** — the installer copies the runtime to `~/.local/share/video-transcript`
->    and writes a `vsum` launcher to `~/.local/bin` (override with `--prefix` / `--bin-dir`).
+>    and writes a `video-transcript` launcher to `~/.local/bin` (override with `--prefix` / `--bin-dir`).
 >    Make sure that bin directory is on your PATH.
 > 3. **Install the skill for yourself** — `./install.sh --skill-dir <your-skills-dir>/video-transcript`,
 >    pointing at the directory you actually load skills from.
 >
-> Finish by running `./vsum <a sample link or file>` and reporting its `method`, `chars` and `warnings`.
+> Finish by running `./video-transcript <a sample link or file>` and reporting its `method`, `chars` and `warnings`.
 
 All three in one line (fill in your own skills directory):
 
@@ -58,7 +58,7 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 
 | exit | meaning |
 |---|---|
-| 0 | ready — `./vsum <input>` works |
+| 0 | ready — `./video-transcript <input>` works |
 | 1 | blocked on `needs_user` |
 | 2 | installer itself failed |
 
@@ -87,7 +87,7 @@ So the tool does the cheap, precise thing: sample frames, read only the subtitle
 make doctor            # which speech languages this Mac supports / has installed
 ```
 
-The runtime (`cli/` + `.build/`) lands in `~/.local/share/video-transcript` and a `vsum`
+The runtime (`cli/` + `.build/`) lands in `~/.local/share/video-transcript` and a `video-transcript`
 launcher in `~/.local/bin`. **The clone is disposable once this finishes** — and a later
 `git pull` cannot silently change what is installed.
 
@@ -100,17 +100,17 @@ First run in a new language downloads that speech model once (a few seconds). Af
 
 ```bash
 # a web page (uses your logged-in Chrome to resolve the media URL)
-python3 cli/vsum.py "https://xhslink.cn/o/8p8U68Y44ib"
+video-transcript "https://xhslink.cn/o/8p8U68Y44ib"
 
 # a local file
-python3 cli/vsum.py ~/Movies/lecture.mp4
+video-transcript ~/Movies/lecture.mp4
 
 # audio only
-python3 cli/vsum.py ~/Downloads/podcast.m4a
+video-transcript ~/Downloads/podcast.m4a
 
 # force a channel
-python3 cli/vsum.py video.mp4 --method asr
-python3 cli/vsum.py slides.mp4 --method ocr --full
+video-transcript video.mp4 --method asr
+video-transcript slides.mp4 --method ocr --full
 ```
 
 Outputs land in `out/<title>/`:
@@ -124,9 +124,9 @@ Outputs land in `out/<title>/`:
 ### CLI
 
 ```
-vsum <input> [--method auto|ocr|asr] [--fps 1] [--out DIR] [--full]
-             [--langs zh-Hans,en-US] [--asr-mode transcribe|dictation]
-             [--asr-locale zh-CN] [--format json|text] [--keep-work] [--quiet]
+video-transcript <input> [--method auto|ocr|asr] [--fps 1] [--out DIR] [--full]
+    [--langs zh-Hans,en-US] [--asr-mode transcribe|dictation]
+    [--asr-locale zh-CN] [--format json|text] [--keep-work] [--quiet]
 ```
 
 `--method auto` (default) is a real decision, not a guess by name: it samples 5 frames, OCRs the lower third, drops anything that repeats across frames (watermarks, channel logos), and switches to ASR unless ≥60% of frames still show text. Any explicit `--method` overrides it.
@@ -204,8 +204,8 @@ Install it as a skill: `./install.sh --skill-dir <your-skills-dir>/video-transcr
 
 ```
 install.sh           agent-runnable installer (idempotent, --json, --yes, --prefix, --skill-dir)
-vsum                 entry point — ./vsum <url|file>
-cli/vsum.py          orchestrator: acquire → probe → channel → recognize → report
+video-transcript     entry point — ./video-transcript <url|file>
+cli/video_transcript.py          orchestrator: acquire → probe → channel → recognize → report
 cli/vocr.swift       Vision OCR CLI (batch, parallel, crop, scale, bbox output)
 cli/transcribe.swift SpeechAnalyzer transcription (transcribe | dictation)
 cli/autoband.py      subtitle-band probe + watermark rejection

@@ -15,7 +15,7 @@ cd video-transcript
 ./install.sh --json --skill-dir <your-skills-dir>/video-transcript
 ```
 
-The installer copies the runtime into `~/.local/share/video-transcript` and writes a `vsum`
+The installer copies the runtime into `~/.local/share/video-transcript` and writes a `video-transcript`
 launcher into `~/.local/bin` (it warns if that directory is not on your PATH). The clone is
 disposable afterwards.
 `--skill-dir` copies this skill and its references into your own skills directory, so a later
@@ -31,14 +31,14 @@ Exit code 0 = ready, 1 = blocked on you, 2 = installer failure. The installer is
 ## Run
 
 ```bash
-vsum <input>
+video-transcript <input>
 ```
 
 ## Decide what to run
 
 | Situation | Command |
 |---|---|
-| Default (you have a link or a file) | `vsum "<url or path>"` |
+| Default (you have a link or a file) | `video-transcript "<url or path>"` |
 | You know it has burned-in subtitles | add `--method ocr` |
 | You know it is speech only | add `--method asr` |
 | Slides / screen recording, text everywhere | `--method ocr --full` |

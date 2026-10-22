@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""vsum — turn any video/audio into a timestamped transcript, fully on-device on macOS.
+"""video-transcript — turn any video/audio into a timestamped transcript, fully on-device on macOS.
 
 Channel selection:
   · burned-in subtitles  -> ffmpeg frame sampling + Apple Vision OCR
@@ -34,7 +34,7 @@ EXIT_ARGS, EXIT_FETCH, EXIT_RECOGNIZE, EXIT_DEPS = 2, 3, 4, 5
 
 
 def die(msg, code=EXIT_RECOGNIZE):
-    print(f"[vsum] {msg}", file=sys.stderr)
+    print(f"[video-transcript] {msg}", file=sys.stderr)
     sys.exit(code)
 
 
@@ -180,7 +180,7 @@ def run_asr(video, out_dir, work, langs, asr_mode, asr_locale_opt):
 
 def main():
     ap = argparse.ArgumentParser(
-        prog="vsum",
+        prog="video-transcript",
         description="Transcribe any video/audio on macOS (Vision OCR + SpeechAnalyzer). No API keys, no network for recognition.")
     ap.add_argument("input", help="web page URL, direct media URL, or local video/audio file")
     ap.add_argument("--method", choices=["auto", "ocr", "asr"], default="auto",
@@ -195,7 +195,7 @@ def main():
     ap.add_argument("--format", choices=["json", "text"], default="json")
     ap.add_argument("--keep-work", action="store_true", help="keep downloaded media and intermediate frames")
     ap.add_argument("--quiet", action="store_true")
-    ap.add_argument("--version", action="version", version=f"vsum {VERSION}")
+    ap.add_argument("--version", action="version", version=f"video-transcript {VERSION}")
     a = ap.parse_args()
 
     log = (lambda *x: None) if a.quiet else (lambda *x: print(*x, file=sys.stderr))
@@ -203,7 +203,7 @@ def main():
     t_start = time.time()
     warnings = []
 
-    work = Path(tempfile.mkdtemp(prefix="vsum-"))
+    work = Path(tempfile.mkdtemp(prefix="video-transcript-"))
     try:
         # ---------- acquire media ----------
         src, title, referer = a.input, "", ""
@@ -215,7 +215,7 @@ def main():
                     die("download failed: " + err, EXIT_FETCH)
                 title = Path(src.split("?")[0]).stem
             else:
-                log("[vsum] resolving media via Chrome (CDP)…")
+                log("[video-transcript] resolving media via Chrome (CDP)…")
                 r = run(["node", str(FETCH), src])
                 if r.returncode != 0 or not r.stdout.strip():
                     die("could not resolve media from page: " + (r.stderr or "")[:400], EXIT_FETCH)
@@ -234,7 +234,7 @@ def main():
 
         meta = probe(video)
         dur = meta.get("duration") or 0
-        log(f"[vsum] {dur:.1f}s {meta.get('width')}x{meta.get('height')} {meta.get('codec')}")
+        log(f"[video-transcript] {dur:.1f}s {meta.get('width')}x{meta.get('height')} {meta.get('codec')}")
         if not meta.get("has_audio"):
             warnings.append("no audio track: speech recognition unavailable")
         if not meta.get("has_video"):
@@ -250,7 +250,7 @@ def main():
         elif not meta.get("has_audio"):
             method = "ocr"
         elif method == "auto":
-            log("[vsum] probing for burned-in subtitles…")
+            log("[video-transcript] probing for burned-in subtitles…")
             picks = sample_frames(video, dur, work, 5)
             band = detect_band(picks, work, a.langs)
             rate = (band or {}).get("hit_rate", 0.0)
@@ -258,7 +258,7 @@ def main():
                 method = "ocr"
             else:
                 method = "asr"
-                log(f"[vsum] subtitle probe: {json.dumps(band, ensure_ascii=False)} "
+                log(f"[video-transcript] subtitle probe: {json.dumps(band, ensure_ascii=False)} "
                     f"-> hit_rate {rate:.0%}, using speech recognition")
         elif method == "ocr" and not a.full:
             picks = sample_frames(video, dur, work, 5)
@@ -266,7 +266,7 @@ def main():
 
         if method == "asr" and not meta.get("has_audio"):
             die("no audio track and no usable subtitles", EXIT_RECOGNIZE)
-        log(f"[vsum] channel: {method}")
+        log(f"[video-transcript] channel: {method}")
 
         # ---------- recognize ----------
         if method == "ocr":
@@ -327,7 +327,7 @@ def main():
             print(json.dumps(result, ensure_ascii=False))
     finally:
         if a.keep_work:
-            print(f"[vsum] work dir kept: {work}", file=sys.stderr)
+            print(f"[video-transcript] work dir kept: {work}", file=sys.stderr)
         else:
             shutil.rmtree(work, ignore_errors=True)
 

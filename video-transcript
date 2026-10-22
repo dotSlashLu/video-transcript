@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vsum — thin wrapper so agents can call ./vsum instead of python3 cli/vsum.py
+# video-transcript — thin wrapper so you can call ./video-transcript instead of python3 cli/video_transcript.py
 set -euo pipefail
 
 src="${BASH_SOURCE[0]}"
@@ -10,4 +10,4 @@ while [ -L "$src" ]; do
 done
 here="$(cd -P "$(dirname "$src")" && pwd)"
 
-exec python3 "$here/cli/vsum.py" "$@"
+exec python3 "$here/cli/video_transcript.py" "$@"

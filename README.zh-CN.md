@@ -26,12 +26,12 @@
 > 1. **依赖与编译** —— `./install.sh --json`，逐条解决 `needs_user` 里的问题（需要 sudo 的先问我），
 >    直到 `ready` 为 true。
 > 2. **让 CLI 可被解析** —— 安装器会把运行时复制到 `~/.local/share/video-transcript`，
->    并在 `~/.local/bin` 写一个 `vsum` 启动器（可用 `--prefix` / `--bin-dir` 改位置）。
+>    并在 `~/.local/bin` 写一个 `video-transcript` 启动器（可用 `--prefix` / `--bin-dir` 改位置）。
 >    确认那个 bin 目录在你的 PATH 里。
 > 3. **给自己装 skill** —— `./install.sh --skill-dir <你的技能目录>/video-transcript`，
 >    指向你实际加载技能的那个目录。
 >
-> 最后跑 `./vsum <一个链接或文件>`，报告它的 `method`、`chars` 和 `warnings`。
+> 最后跑 `./video-transcript <一个链接或文件>`，报告它的 `method`、`chars` 和 `warnings`。
 
 三步一条命令（技能目录自己填）：
 
@@ -57,7 +57,7 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 
 | 退出码 | 含义 |
 |---|---|
-| 0 | 就绪，`./vsum <输入>` 可直接用 |
+| 0 | 就绪，`./video-transcript <输入>` 可直接用 |
 | 1 | 卡在 `needs_user` |
 | 2 | 安装器本身出错 |
 
@@ -86,7 +86,7 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 make doctor            # 查看本机支持/已安装哪些语音语言
 ```
 
-运行时（`cli/` + `.build/`）落到 `~/.local/share/video-transcript`，`vsum` 启动器落到
+运行时（`cli/` + `.build/`）落到 `~/.local/share/video-transcript`，`video-transcript` 启动器落到
 `~/.local/bin`。**装完 clone 就可以删掉**——之后的 `git pull` 也不会偷偷改变已装的版本。
 
 ```text
@@ -98,17 +98,17 @@ make doctor            # 查看本机支持/已安装哪些语音语言
 
 ```bash
 # 网页（借你已登录的 Chrome 解析视频直链）
-python3 cli/vsum.py "https://xhslink.cn/o/8p8U68Y44ib"
+video-transcript "https://xhslink.cn/o/8p8U68Y44ib"
 
 # 本地文件
-python3 cli/vsum.py ~/Movies/lecture.mp4
+video-transcript ~/Movies/lecture.mp4
 
 # 纯音频
-python3 cli/vsum.py ~/Downloads/podcast.m4a
+video-transcript ~/Downloads/podcast.m4a
 
 # 强制通道
-python3 cli/vsum.py video.mp4 --method asr
-python3 cli/vsum.py slides.mp4 --method ocr --full
+video-transcript video.mp4 --method asr
+video-transcript slides.mp4 --method ocr --full
 ```
 
 产物落在 `out/<标题>/`：
@@ -122,7 +122,7 @@ python3 cli/vsum.py slides.mp4 --method ocr --full
 ### 命令行
 
 ```
-vsum <输入> [--method auto|ocr|asr] [--fps 1] [--out DIR] [--full]
+video-transcript <输入> [--method auto|ocr|asr] [--fps 1] [--out DIR] [--full]
             [--langs zh-Hans,en-US] [--asr-mode transcribe|dictation]
             [--asr-locale zh-CN] [--format json|text] [--keep-work] [--quiet]
 ```
@@ -201,8 +201,8 @@ ASR 有时"看起来更差"：它把字幕精简掉的口语补了回来（"说�
 
 ```
 install.sh          给 agent 跑的安装器（幂等，--json / --yes / --prefix / --skill-dir）
-vsum                入口 —— ./vsum <链接|文件>
-cli/vsum.py         主流程：取流 → 探测 → 选通道 → 识别 → 报告
+video-transcript    入口 —— ./video-transcript <链接|文件>
+cli/video_transcript.py         主流程：取流 → 探测 → 选通道 → 识别 → 报告
 cli/vocr.swift      Vision OCR 命令行（批量、并行、裁剪、放大、输出 bbox）
 cli/transcribe.swift SpeechAnalyzer 转写（transcribe | dictation）
 cli/autoband.py     字幕带探测 + 水印剔除
