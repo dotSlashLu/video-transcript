@@ -31,7 +31,8 @@
 > 3. **给自己装 skill** —— `./install.sh --skill-dir <你的技能目录>/video-transcript`，
 >    指向你实际加载技能的那个目录。
 >
-> 最后跑 `./video-transcript <一个链接或文件>`，报告它的 `method`、`chars` 和 `warnings`。
+> **验证**在 clone 目录里跑 `make test`——它会合成 2 秒静音音频、跑一遍 ASR 通道，不需要样片。
+> 最后报告 `ready`、`needs_user` 和冒烟测试结果。
 
 三步一条命令（技能目录自己填）：
 

@@ -32,7 +32,8 @@ Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 > 3. **Install the skill for yourself** — `./install.sh --skill-dir <your-skills-dir>/video-transcript`,
 >    pointing at the directory you actually load skills from.
 >
-> Finish by running `./video-transcript <a sample link or file>` and reporting its `method`, `chars` and `warnings`.
+> **Verify** with `make test` inside the clone — it synthesizes a 2-second silent clip and runs it
+> through the ASR channel, so no sample file is needed. Report `ready`, `needs_user` and the result.
 
 All three in one line (fill in your own skills directory):
 
