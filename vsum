@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# vsum — thin wrapper so agents can call ./vsum instead of python3 cli/vsum.py
+set -euo pipefail
+
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  case "$src" in /*) ;; *) src="$dir/$src" ;; esac
+done
+here="$(cd -P "$(dirname "$src")" && pwd)"
+
+exec python3 "$here/cli/vsum.py" "$@"

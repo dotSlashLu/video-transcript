@@ -2,7 +2,7 @@ SHELL := /bin/bash
 BUILD := .build
 SWIFTC := swiftc -O
 
-.PHONY: all clean doctor test version
+.PHONY: all clean doctor test version install
 
 all: $(BUILD)/vocr $(BUILD)/transcribe $(BUILD)/probe_speech
 	@echo "built: $(BUILD)/{vocr,transcribe,probe_speech}"
@@ -30,6 +30,9 @@ test: all
 	@python3 cli/vsum.py /tmp/vsum-silence.wav --format json --quiet \
 	  | python3 -c 'import json,sys; d=json.load(sys.stdin); print("smoke ok, channel =", d["method"])'
 	@rm -f /tmp/vsum-silence.wav
+
+install:
+	./install.sh --yes --link
 
 version:
 	@python3 cli/vsum.py --version

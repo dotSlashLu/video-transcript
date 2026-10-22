@@ -17,6 +17,46 @@
 
 ---
 
+## 🤖 给 agent：自己装
+
+把下面这段丢给任何有 shell 的 agent（Claude Code、Codex、Cursor…）：
+
+> 从 `<repo-url>` 安装 `video-transcript`：克隆到 `~/tools/video-transcript`，
+> 运行 `./install.sh --json`，逐条处理 `needs_user` 里的问题——需要 sudo 的先问我。
+> 直到 `ready` 为 true，然后跑 `./vsum <一个链接或文件>`，报告它的
+> `method`、`chars` 和 `warnings`。
+
+或者一条命令了事：
+
+```bash
+git clone <repo-url> ~/tools/video-transcript && ~/tools/video-transcript/install.sh --yes --link
+```
+
+`install.sh` 幂等、不需要交互，stdout 只输出**一个 JSON 对象**（进度走 stderr），并且把「它自己修好的」和「只有你能做的」分开：
+
+```json
+{
+  "ready": false,
+  "checks": [{"name": "ffmpeg", "status": "missing", "detail": "not installed"}],
+  "fixed": [],
+  "needs_user": [
+    {"issue": "编译识别器需要 Xcode Command Line Tools",
+     "command": "xcode-select --install"}
+  ],
+  "next": "resolve needs_user, then rerun ./install.sh --json"
+}
+```
+
+| 退出码 | 含义 |
+|---|---|
+| 0 | 就绪，`./vsum <输入>` 可直接用 |
+| 1 | 卡在 `needs_user` |
+| 2 | 安装器本身出错 |
+
+给 agent 的提示：`xcode-select --install` 会弹 GUI 窗口，这一项要交给用户；`brew install ffmpeg` 可以自己跑（或直接传 `--yes`）。node 是可选的，只有从网页取流时才需要。
+
+---
+
 ## 为什么这么做
 
 把 432 帧喂给视觉模型当然能出结果，但又慢又贵，而那 432 帧里九成是装饰性动画。一个口播讲解视频真正值得读的只有两样：**作者手打的字幕**（已经校对过的文本）和**说的话**。其余都是壁纸。
@@ -32,9 +72,10 @@
 | 运行时 | `ffmpeg`、`python3`、`node`（node 仅用于抓网页） |
 
 ```bash
-git clone <your-repo> video-transcript && cd video-transcript
-make                 # 编译出 .build/{vocr,transcribe,probe_speech}
-make doctor          # 查看本机支持/已安装哪些语音语言
+./install.sh           # 检查依赖、编译、报告缺什么
+./install.sh --json    # 同上，机器可读
+./install.sh --link    # 顺便把 ./vsum 软链到 ~/.local/bin
+make doctor            # 查看本机支持/已安装哪些语音语言
 ```
 
 某语言第一次使用会自动下载语音模型（几秒），之后完全离线。
@@ -145,6 +186,8 @@ ASR 有时"看起来更差"：它把字幕精简掉的口语补了回来（"说�
 ## 目录结构
 
 ```
+install.sh          给 agent 跑的安装器（幂等，--json / --yes / --link）
+vsum                入口 —— ./vsum <链接|文件>
 cli/vsum.py         主流程：取流 → 探测 → 选通道 → 识别 → 报告
 cli/vocr.swift      Vision OCR 命令行（批量、并行、裁剪、放大、输出 bbox）
 cli/transcribe.swift SpeechAnalyzer 转写（transcribe | dictation）

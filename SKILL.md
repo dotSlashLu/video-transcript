@@ -7,18 +7,31 @@ description: Transcribe and summarize a video or audio file on macOS using Apple
 
 A 7-minute 1080p video becomes 2,000 characters of timestamped text in **10–30 seconds**, entirely on this Mac. The point is not raw transcription — it is being able to *reason about* a video: quote it, check it, summarize it.
 
-Run everything from the repo root:
+## Install (first run only)
 
 ```bash
-make                      # one-time: compiles the Swift binaries into .build/
-python3 cli/vsum.py <input>
+git clone <repo-url> ~/tools/video-transcript && cd ~/tools/video-transcript
+./install.sh --json
+```
+
+Read the JSON. If `ready` is false:
+
+- every entry in `needs_user` carries a `command` — run it yourself, except when it needs sudo or a GUI (`xcode-select --install` opens a dialog: hand that one to the user);
+- rerun `./install.sh --json` until `ready` is true.
+
+Exit code 0 = ready, 1 = blocked on you, 2 = installer failure. The installer is idempotent; running it again is always safe.
+
+## Run
+
+```bash
+./vsum <input>
 ```
 
 ## Decide what to run
 
 | Situation | Command |
 |---|---|
-| Default (you have a link or a file) | `python3 cli/vsum.py "<url or path>"` |
+| Default (you have a link or a file) | `./vsum "<url or path>"` |
 | You know it has burned-in subtitles | add `--method ocr` |
 | You know it is speech only | add `--method asr` |
 | Slides / screen recording, text everywhere | `--method ocr --full` |
