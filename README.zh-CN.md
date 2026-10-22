@@ -21,15 +21,15 @@
 
 把下面这段丢给任何有 shell 的 agent（Claude Code、Codex、Cursor…）：
 
-> 从 `https://github.com/dotSlashLu/video-transcript` 安装 `video-transcript`：克隆到 `~/tools/video-transcript`，
-> 运行 `./install.sh --json`，逐条处理 `needs_user` 里的问题——需要 sudo 的先问我。
+> 从 `https://github.com/dotSlashLu/video-transcript` 安装 `video-transcript`：克隆到你惯常放工具的位置，
+> 在仓库根目录运行 `./install.sh --json`，逐条处理 `needs_user` 里的问题——需要 sudo 的先问我。
 > 直到 `ready` 为 true，然后跑 `./vsum <一个链接或文件>`，报告它的
 > `method`、`chars` 和 `warnings`。
 
 或者一条命令了事：
 
 ```bash
-git clone https://github.com/dotSlashLu/video-transcript ~/tools/video-transcript && ~/tools/video-transcript/install.sh --yes --link
+git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcript && ./install.sh --yes --link
 ```
 
 `install.sh` 幂等、不需要交互，stdout 只输出**一个 JSON 对象**（进度走 stderr），并且把「它自己修好的」和「只有你能做的」分开：
