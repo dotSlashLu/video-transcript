@@ -94,6 +94,17 @@ make doctor            # 查看本机支持/已安装哪些语音语言
 运行时（`cli/` + `.build/`）落到 `~/.local/share/video-transcript`，`video-transcript` 启动器落到
 `~/.local/bin`。**装完 clone 就可以删掉**——之后的 `git pull` 也不会偷偷改变已装的版本。
 
+### 预编译包（不需要编译器）
+
+```bash
+arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
+curl -fsSL -o /tmp/vt.zip \
+  "https://github.com/dotSlashLu/video-transcript/releases/latest/download/video-transcript-macos-$arch.zip"
+unzip -q /tmp/vt.zip -d /tmp/vt && /tmp/vt/video-transcript/install.sh --yes
+```
+
+更新也是同样三行。仍然需要 `ffmpeg`（`brew install ffmpeg`），但识别器已经编译好了。
+
 ```text
 ```
 

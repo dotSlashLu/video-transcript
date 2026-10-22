@@ -98,6 +98,18 @@ The runtime (`cli/` + `.build/`) lands in `~/.local/share/video-transcript` and 
 launcher in `~/.local/bin`. **The clone is disposable once this finishes** — and a later
 `git pull` cannot silently change what is installed.
 
+### Prebuilt release (no compiler needed)
+
+```bash
+arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
+curl -fsSL -o /tmp/vt.zip \
+  "https://github.com/dotSlashLu/video-transcript/releases/latest/download/video-transcript-macos-$arch.zip"
+unzip -q /tmp/vt.zip -d /tmp/vt && /tmp/vt/video-transcript/install.sh --yes
+```
+
+Updating is the same three lines. You still need `ffmpeg` (`brew install ffmpeg`); the
+recognizers come pre-compiled.
+
 ```text
 ```
 

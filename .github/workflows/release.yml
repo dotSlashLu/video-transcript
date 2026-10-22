@@ -1,0 +1,58 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            arch: arm64
+          - runner: macos-26-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build recognizers
+        run: make all
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist/video-transcript
+          # -p keeps mtimes so `make` inside the unpacked zip is a no-op
+          cp -Rp cli .build skill install.sh video-transcript Makefile \
+                   README.md README.zh-CN.md LICENSE dist/video-transcript/
+          cd dist
+          NAME="video-transcript-macos-${{ matrix.arch }}.zip"
+          zip -qry "$NAME" video-transcript
+          shasum -a 256 "$NAME" > "$NAME.sha256"
+          unzip -l "$NAME" | tail -3
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/video-transcript-macos-${{ matrix.arch }}.zip
+            dist/video-transcript-macos-${{ matrix.arch }}.zip.sha256
+          body: |
+            Prebuilt for **macOS 26+**. No compiler needed.
+
+            ```bash
+            arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
+            curl -fsSL -o /tmp/vt.zip \
+              "https://github.com/dotSlashLu/video-transcript/releases/latest/download/video-transcript-macos-$arch.zip"
+            unzip -q /tmp/vt.zip -d /tmp/vt
+            /tmp/vt/video-transcript/install.sh --yes
+            ```
+
+            Updating is the same three lines. `install.sh` copies the runtime to
+            `~/.local/share/video-transcript` and a launcher to `~/.local/bin`.
