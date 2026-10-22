@@ -26,8 +26,9 @@ Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 >
 > 1. **Dependencies + build** — `./install.sh --json`, and resolve every entry in `needs_user`
 >    (ask me before running anything that needs sudo). Rerun until `ready` is true.
-> 2. **Make the CLI resolvable** — `./install.sh --link`, or symlink `./vsum` into a bin directory
->    already on your PATH.
+> 2. **Make the CLI resolvable** — the installer copies the runtime to `~/.local/share/video-transcript`
+>    and writes a `vsum` launcher to `~/.local/bin` (override with `--prefix` / `--bin-dir`).
+>    Make sure that bin directory is on your PATH.
 > 3. **Install the skill for yourself** — `./install.sh --skill-dir <your-skills-dir>/video-transcript`,
 >    pointing at the directory you actually load skills from.
 >
@@ -37,7 +38,7 @@ All three in one line (fill in your own skills directory):
 
 ```bash
 git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcript \
-  && ./install.sh --yes --link --skill-dir "<your-skills-dir>/video-transcript"
+  && ./install.sh --yes --skill-dir "<your-skills-dir>/video-transcript"
 ```
 
 `install.sh` is idempotent, needs no input, and prints exactly **one JSON object** on stdout (progress goes to stderr). It separates what it fixed from what only you can do:
@@ -80,10 +81,17 @@ So the tool does the cheap, precise thing: sample frames, read only the subtitle
 | Runtime | `ffmpeg`, `python3`, `node` (node only for fetching web pages) |
 
 ```bash
-./install.sh           # checks deps, compiles, reports what is missing
+./install.sh           # checks deps, compiles, copies the runtime out of the repo
 ./install.sh --json    # same thing, machine-readable
-./install.sh --link    # also symlink ./vsum into ~/.local/bin
+./install.sh --prefix <dir> --bin-dir <dir>   # install somewhere else
 make doctor            # which speech languages this Mac supports / has installed
+```
+
+The runtime (`cli/` + `.build/`) lands in `~/.local/share/video-transcript` and a `vsum`
+launcher in `~/.local/bin`. **The clone is disposable once this finishes** — and a later
+`git pull` cannot silently change what is installed.
+
+```text
 ```
 
 First run in a new language downloads that speech model once (a few seconds). After that it is fully offline.
@@ -195,7 +203,7 @@ Install it as a skill: `./install.sh --skill-dir <your-skills-dir>/video-transcr
 ## Repository layout
 
 ```
-install.sh           agent-runnable installer (idempotent, --json, --yes, --link)
+install.sh           agent-runnable installer (idempotent, --json, --yes, --prefix, --skill-dir)
 vsum                 entry point — ./vsum <url|file>
 cli/vsum.py          orchestrator: acquire → probe → channel → recognize → report
 cli/vocr.swift       Vision OCR CLI (batch, parallel, crop, scale, bbox output)

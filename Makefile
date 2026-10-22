@@ -32,7 +32,7 @@ test: all
 	@rm -f /tmp/vsum-silence.wav
 
 install:
-	./install.sh --yes --link
+	./install.sh --yes
 
 version:
 	@python3 cli/vsum.py --version

@@ -25,7 +25,9 @@
 >
 > 1. **依赖与编译** —— `./install.sh --json`，逐条解决 `needs_user` 里的问题（需要 sudo 的先问我），
 >    直到 `ready` 为 true。
-> 2. **让 CLI 可被解析** —— `./install.sh --link`，或者把 `./vsum` 软链到你 PATH 里已有的 bin 目录。
+> 2. **让 CLI 可被解析** —— 安装器会把运行时复制到 `~/.local/share/video-transcript`，
+>    并在 `~/.local/bin` 写一个 `vsum` 启动器（可用 `--prefix` / `--bin-dir` 改位置）。
+>    确认那个 bin 目录在你的 PATH 里。
 > 3. **给自己装 skill** —— `./install.sh --skill-dir <你的技能目录>/video-transcript`，
 >    指向你实际加载技能的那个目录。
 >
@@ -35,7 +37,7 @@
 
 ```bash
 git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcript \
-  && ./install.sh --yes --link --skill-dir "<你的技能目录>/video-transcript"
+  && ./install.sh --yes --skill-dir "<你的技能目录>/video-transcript"
 ```
 
 `install.sh` 幂等、不需要交互，stdout 只输出**一个 JSON 对象**（进度走 stderr），并且把「它自己修好的」和「只有你能做的」分开：
@@ -78,10 +80,16 @@ git clone https://github.com/dotSlashLu/video-transcript.git && cd video-transcr
 | 运行时 | `ffmpeg`、`python3`、`node`（node 仅用于抓网页） |
 
 ```bash
-./install.sh           # 检查依赖、编译、报告缺什么
+./install.sh           # 检查依赖、编译，并把运行时装出仓库
 ./install.sh --json    # 同上，机器可读
-./install.sh --link    # 顺便把 ./vsum 软链到 ~/.local/bin
+./install.sh --prefix <dir> --bin-dir <dir>   # 装到别处
 make doctor            # 查看本机支持/已安装哪些语音语言
+```
+
+运行时（`cli/` + `.build/`）落到 `~/.local/share/video-transcript`，`vsum` 启动器落到
+`~/.local/bin`。**装完 clone 就可以删掉**——之后的 `git pull` 也不会偷偷改变已装的版本。
+
+```text
 ```
 
 某语言第一次使用会自动下载语音模型（几秒），之后完全离线。
@@ -192,7 +200,7 @@ ASR 有时"看起来更差"：它把字幕精简掉的口语补了回来（"说�
 ## 目录结构
 
 ```
-install.sh          给 agent 跑的安装器（幂等，--json / --yes / --link）
+install.sh          给 agent 跑的安装器（幂等，--json / --yes / --prefix / --skill-dir）
 vsum                入口 —— ./vsum <链接|文件>
 cli/vsum.py         主流程：取流 → 探测 → 选通道 → 识别 → 报告
 cli/vocr.swift      Vision OCR 命令行（批量、并行、裁剪、放大、输出 bbox）

@@ -4,26 +4,37 @@
 # Designed to be run by an agent, not a human:
 #   ./install.sh --json                     -> one JSON object on stdout, progress on stderr
 #   ./install.sh --yes                      -> install missing Homebrew packages without asking
-#   ./install.sh --link                     -> symlink ./vsum into ~/.local/bin
-#   ./install.sh --skill-dir <dir>          -> install SKILL.md + references into <dir>
-#                                              (pass your own skills directory, e.g.
-#                                               ~/.claude/skills/video-transcript)
+#   ./install.sh --prefix <dir>             -> where the runtime is copied
+#                                              (default ~/.local/share/video-transcript)
+#   ./install.sh --bin-dir <dir>            -> where the vsum launcher goes (default ~/.local/bin)
+#   ./install.sh --no-install               -> build only, do not copy anything
+#   ./install.sh --skill-dir <dir>          -> install the agent skill into <dir>
+#                                              (e.g. ~/.claude/skills/video-transcript)
+#
+# The runtime (cli/ + .build/) is copied out of the repo, so the clone can be
+# deleted afterwards and a later `git pull` cannot change what is installed.
 #
 # Exit codes: 0 = ready, 1 = needs user action, 2 = failed.
 set -uo pipefail
 
 JSON=0
 ASSUME_YES=0
-DO_LINK=0
+DO_INSTALL=1
 SKILL_DIR=""
+PREFIX="${HOME}/.local/share/video-transcript"
+BIN_DIR="${HOME}/.local/bin"
 while [ $# -gt 0 ]; do
   case "$1" in
     --json) JSON=1 ;;
     --yes|-y) ASSUME_YES=1 ;;
-    --link) DO_LINK=1 ;;
+    --no-install) DO_INSTALL=0 ;;
+    --prefix) PREFIX="${2:-}"; shift ;;
+    --bin-dir) BIN_DIR="${2:-}"; shift ;;
     --skill-dir) SKILL_DIR="${2:-}"; shift ;;
+    --link)
+      echo "--link is obsolete: installing is now a real copy, see --prefix/--bin-dir" >&2 ;;
     -h|--help)
-      sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echo "unknown flag: $1" >&2; exit 2 ;;
   esac
@@ -126,21 +137,39 @@ else
   record speech skipped "probe_speech not built"
 fi
 
-# ---------- 6. CLI on PATH ----------
-if [ "$DO_LINK" -eq 1 ]; then
-  mkdir -p "$HOME/.local/bin"
-  ln -sf "$REPO/vsum" "$HOME/.local/bin/vsum"
-  case ":$PATH:" in
-    *":$HOME/.local/bin:"*)
-      record cli ok "$HOME/.local/bin/vsum (on PATH)" ;;
+# ---------- 6. install the runtime ----------
+if [ "$DO_INSTALL" -eq 1 ]; then
+  case "$PREFIX" in
+    /|""|"$HOME") record install failed "refusing unsafe prefix: '$PREFIX'" ;;
     *)
-      record cli warn "$HOME/.local/bin/vsum — not on PATH"
-      need "$HOME/.local/bin is not on PATH, so 'vsum' will not resolve" \
-           "export PATH=\"\$HOME/.local/bin:\$PATH\"  # or symlink $REPO/vsum into a bin dir already on PATH" ;;
+      if [ -d "$REPO/.build" ] && [ -f "$REPO/cli/vsum.py" ]; then
+        mkdir -p "$PREFIX"
+        rm -rf "$PREFIX/cli" "$PREFIX/.build"
+        cp -R "$REPO/cli" "$PREFIX/cli"
+        cp -R "$REPO/.build" "$PREFIX/.build"
+        rm -rf "$PREFIX/cli/__pycache__"
+        mkdir -p "$BIN_DIR"
+        rm -f "$BIN_DIR/vsum"   # never write through a pre-existing symlink
+        cat > "$BIN_DIR/vsum" <<LAUNCHER
+#!/usr/bin/env bash
+exec python3 "$PREFIX/cli/vsum.py" "\$@"
+LAUNCHER
+        chmod +x "$BIN_DIR/vsum"
+        record install ok "$PREFIX"
+        fixed "copied runtime into $PREFIX"
+        case ":$PATH:" in
+          *":$BIN_DIR:"*) record cli ok "$BIN_DIR/vsum" ;;
+          *)
+            record cli warn "$BIN_DIR/vsum — $BIN_DIR is not on PATH"
+            need "$BIN_DIR is not on PATH, so 'vsum' will not resolve" \
+                 "export PATH=\"$BIN_DIR:\$PATH\"  # then reload your shell" ;;
+        esac
+      else
+        record install failed "build artifacts missing; run make first"
+      fi ;;
   esac
-  fixed "symlinked vsum into ~/.local/bin"
 else
-  record cli ok "$REPO/vsum (run via ./vsum or use --link)"
+  record install skipped "--no-install: use ./vsum from the repo"
 fi
 
 # ---------- 7. skill for the agent ----------
