@@ -21,25 +21,28 @@ It takes files, not URLs. Turning a page into a file is your business (or your a
 
 ## 🤖 For agents — install it yourself
 
-Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
+Paste this into your agent:
 
-> Install `video-transcript` from https://github.com/dotSlashLu/video-transcript. Use the prebuilt
-> release zip — no compiler needed. Steps:
->
-> 1. Pick the asset matching this machine (`arm64` or `x64` from `uname -m`) from
->    `/releases/latest/download/`, unzip it into a temporary folder.
-> 2. Run `install.sh --json` from inside it. It reports what it fixed and what is still blocking;
->    clear the blockers (ask me before anything that needs sudo) and rerun until it says ready.
-> 3. Run the same script again with `--skill-dir <your-skills-dir>/video-transcript`, pointing at
->    the directory you actually load skills from.
-> 4. Verify: synthesize a 2-second silent clip with `ffmpeg` and pass it to `video-transcript`;
->    `"ok": true` means the whole pipeline works. No sample file needed.
-> 5. Delete the temporary folder.
->
-> Tell me where things landed, whether the smoke test passed, and anything you need me to do
-> (a GUI prompt you cannot click, a PATH line I have to add, and so on).
+```
+Install the video-transcript CLI and its skill for me.
 
-The whole thing as a script (fill in your own skills directory):
+1. Download the prebuilt package for this machine from
+   https://github.com/dotSlashLu/video-transcript/releases/latest/download/video-transcript-macos-<arch>.zip
+   where <arch> is arm64 if `uname -m` prints arm64, otherwise x64. Unzip it into a temporary folder.
+2. From inside that folder, run ./install.sh --json. It reports what it fixed and what is still
+   blocking; clear the blockers (ask me before anything that needs sudo) and rerun until it says
+   ready.
+3. Run the same script once more with --skill-dir <the directory you load skills from>/video-transcript,
+   so I can use it in future sessions.
+4. Verify with a synthesized clip — no sample file needed:
+   ffmpeg -v error -f lavfi -i anullsrc=r=16000:cl=mono -t 2 -y /tmp/vt-smoke.wav
+   video-transcript /tmp/vt-smoke.wav --format json
+5. Remove the temporary folder.
+
+Then tell me where things landed, whether the smoke test passed, and anything you need from me.
+```
+
+Prefer to do it yourself? The same steps as a script (fill in your skills directory):
 
 ```bash
 arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
@@ -49,6 +52,9 @@ unzip -q /tmp/vt.zip -d /tmp/vt
 /tmp/vt/video-transcript/install.sh --yes --skill-dir "<your-skills-dir>/video-transcript"
 rm -rf /tmp/vt
 ```
+
+`latest/download` always resolves to the newest release; pin `releases/download/v1.0.2/…` instead if
+you need a reproducible build.
 
 `install.sh` is idempotent, needs no input, and prints exactly **one JSON object** on stdout (progress goes to stderr). It separates what it fixed from what only you can do:
 

@@ -21,25 +21,27 @@
 
 ## 🤖 给 agent：自己装
 
-把下面这段丢给任何有 shell 的 agent（Claude Code、Codex、Cursor…）：
+把下面这段话粘给你的 agent：
 
-> 从 https://github.com/dotSlashLu/video-transcript 安装 `video-transcript`。用预编译的 release 包，
-> 不需要编译器。步骤：
->
-> 1. 按本机架构（`uname -m`：`arm64` 或 `x64`）从 `/releases/latest/download/` 取对应 zip，
->    解压到临时目录。
-> 2. 进去跑 `install.sh --json`。它会说清楚修好了什么、还差什么；把还差的处理掉
->    （需要 sudo 的先问我），重跑到它说就绪。
-> 3. 同一个脚本再加 `--skill-dir <你的技能目录>/video-transcript` 跑一次，
->    指向你实际加载技能的那个目录。
-> 4. 验证：用 ffmpeg 合成 2 秒静音音频喂给 `video-transcript`，返回 `"ok": true` 就算整条链路通了。
->    不需要样片。
-> 5. 删掉临时目录。
->
-> 装完告诉我：装到哪了、冒烟测试过没过、有没有需要我做的事（比如需要我点的弹窗、
-> 需要我加到 PATH 的一行配置）。
+```
+帮我安装 video-transcript 的 CLI 和 skill。
 
-整件事写成脚本（技能目录自己填）：
+1. 按本机架构下载预编译包：
+   https://github.com/dotSlashLu/video-transcript/releases/latest/download/video-transcript-macos-<arch>.zip
+   其中 <arch>：`uname -m` 输出 arm64 就用 arm64，否则用 x64。解压到一个临时目录。
+2. 进去运行 ./install.sh --json。它会说清楚修好了什么、还差什么；把还差的处理掉
+   （需要 sudo 的先问我），重跑到它说就绪。
+3. 同一个脚本再加 --skill-dir <你实际加载技能的目录>/video-transcript 跑一次，
+   这样我以后开会话就能用。
+4. 用合成音频自检，不需要样片：
+   ffmpeg -v error -f lavfi -i anullsrc=r=16000:cl=mono -t 2 -y /tmp/vt-smoke.wav
+   video-transcript /tmp/vt-smoke.wav --format json
+5. 删掉临时目录。
+
+装完告诉我：装到哪了、自检过没过、有没有需要我做的事。
+```
+
+想自己动手？同样的步骤写成脚本（技能目录自己填）：
 
 ```bash
 arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
@@ -49,6 +51,8 @@ unzip -q /tmp/vt.zip -d /tmp/vt
 /tmp/vt/video-transcript/install.sh --yes --skill-dir "<你的技能目录>/video-transcript"
 rm -rf /tmp/vt
 ```
+
+`latest/download` 永远指向最新版本；需要可复现的固定版本时，用 `releases/download/v1.0.2/…`。
 
 `install.sh` 幂等、不需要交互，stdout 只输出**一个 JSON 对象**（进度走 stderr），并且把「它自己修好的」和「只有你能做的」分开：
 
