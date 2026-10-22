@@ -159,15 +159,23 @@ if [ "$DO_INSTALL" -eq 1 ]; then
 exec python3 "$PREFIX/cli/video_transcript.py" "\$@"
 LAUNCHER
         chmod +x "$BIN_DIR/video-transcript"
-        record install ok "$PREFIX"
-        fixed "copied runtime into $PREFIX"
-        case ":$PATH:" in
-          *":$BIN_DIR:"*) record cli ok "$BIN_DIR/video-transcript" ;;
-          *)
-            record cli warn "$BIN_DIR/video-transcript — $BIN_DIR is not on PATH"
-            need "$BIN_DIR is not on PATH, so 'video-transcript' will not resolve" \
-                 "export PATH=\"$BIN_DIR:\$PATH\"  # then reload your shell" ;;
-        esac
+        # 只有产物真的落地才算装好——cp 可能因权限/磁盘失败而不报错
+        if [ -f "$PREFIX/cli/video_transcript.py" ] && [ -x "$PREFIX/.build/vocr" ] \
+           && [ -x "$PREFIX/.build/transcribe" ] && [ -x "$BIN_DIR/video-transcript" ]; then
+          record install ok "$PREFIX"
+          fixed "copied runtime into $PREFIX"
+          case ":$PATH:" in
+            *":$BIN_DIR:"*) record cli ok "$BIN_DIR/video-transcript" ;;
+            *)
+              record cli warn "$BIN_DIR/video-transcript — $BIN_DIR is not on PATH"
+              need "$BIN_DIR is not on PATH, so 'video-transcript' will not resolve" \
+                   "export PATH=\"$BIN_DIR:\$PATH\"  # then reload your shell" ;;
+          esac
+        else
+          record install failed "runtime did not land in $PREFIX"
+          need "copying the runtime into $PREFIX failed" \
+               "check permissions and free space there, then rerun ./install.sh --json"
+        fi
       else
         record install failed "build artifacts missing; run make first"
       fi ;;
