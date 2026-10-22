@@ -23,8 +23,8 @@
 
 > 从 `https://github.com/dotSlashLu/video-transcript` 安装 `video-transcript`：克隆到你惯常放工具的位置，然后做三件事：
 >
-> 1. **依赖与编译** —— `./install.sh --json`，逐条解决 `needs_user` 里的问题（需要 sudo 的先问我），
->    直到 `ready` 为 true。
+> 1. **依赖与编译** —— 跑 `./install.sh --json`，它会说清楚修好了什么、还差什么。把还差的处理掉
+>    （需要 sudo 的先问我），重跑到就绪。
 > 2. **让 CLI 可被解析** —— 安装器会把运行时复制到 `~/.local/share/video-transcript`，
 >    并在 `~/.local/bin` 写一个 `video-transcript` 启动器（可用 `--prefix` / `--bin-dir` 改位置）。
 >    确认那个 bin 目录在你的 PATH 里。
@@ -32,7 +32,9 @@
 >    指向你实际加载技能的那个目录。
 >
 > **验证**在 clone 目录里跑 `make test`——它会合成 2 秒静音音频、跑一遍 ASR 通道，不需要样片。
-> 最后报告 `ready`、`needs_user` 和冒烟测试结果。
+>
+> 装完告诉我：装到哪了、冒烟测试过没过、有没有需要我做的事（比如需要我点的弹窗、需要我加到
+> PATH 的一行配置）。
 
 三步一条命令（技能目录自己填）：
 

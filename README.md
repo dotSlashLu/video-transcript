@@ -24,8 +24,9 @@ Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 > Install `video-transcript` from `https://github.com/dotSlashLu/video-transcript`. Clone it wherever
 > you keep tools, then do three things:
 >
-> 1. **Dependencies + build** — `./install.sh --json`, and resolve every entry in `needs_user`
->    (ask me before running anything that needs sudo). Rerun until `ready` is true.
+> 1. **Dependencies + build** — run `./install.sh --json`. It reports what it fixed and what is
+>    still blocking; clear the blockers (ask me before anything that needs sudo) and rerun until
+>    it says ready.
 > 2. **Make the CLI resolvable** — the installer copies the runtime to `~/.local/share/video-transcript`
 >    and writes a `video-transcript` launcher to `~/.local/bin` (override with `--prefix` / `--bin-dir`).
 >    Make sure that bin directory is on your PATH.
@@ -33,7 +34,10 @@ Paste this into any agent with shell access (Claude Code, Codex, Cursor…):
 >    pointing at the directory you actually load skills from.
 >
 > **Verify** with `make test` inside the clone — it synthesizes a 2-second silent clip and runs it
-> through the ASR channel, so no sample file is needed. Report `ready`, `needs_user` and the result.
+> through the ASR channel, so no sample file is needed.
+>
+> When you are done, tell me where things landed, whether the smoke test passed, and anything you
+> need me to do (a GUI prompt you cannot click, a PATH line I have to add, and so on).
 
 All three in one line (fill in your own skills directory):
 
