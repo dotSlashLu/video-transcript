@@ -1,12 +1,12 @@
 # video-transcript
 
-**Turn any video into timestamped text — on-device, on macOS, for free.**
+**Turn any video or audio into timestamped text — on-device, on macOS, for free.**
 
 English · [简体中文](README.zh-CN.md)
 
 Point it at a local file — a screen recording, a downloaded talk, a podcast episode. It gives back a transcript you can quote, search and summarize — without uploading a single byte, without an API key, and without paying per minute.
 
-It takes files, not URLs. Turning a page into a file is your business (or your agent's); this tool starts once there is something on disk.
+It takes files, not URLs. Video and audio are both supported — there is no need to strip the audio track first. Turning a page into a file is your business (or your agent's); this tool starts once there is something on disk.
 
 - **Two channels, picked automatically.** Burned-in subtitles → Apple Vision OCR. No subtitles → Apple SpeechAnalyzer.
 - **10–30 seconds for a 7-minute video.** No GPU rental, no queue.

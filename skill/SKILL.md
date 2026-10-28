@@ -1,6 +1,6 @@
 ---
 name: video-transcript
-description: Transcribe a local video or audio file on macOS using Apple's own engines — Vision OCR reads burned-in subtitles, SpeechAnalyzer transcribes speech. No API keys, no uploads, no per-minute cost. Takes a file path, not a URL. Use when asked to transcribe, quote or summarize a video or audio file already on this machine.
+description: Transcribe a local video or audio file on macOS — podcast episodes, meeting recordings, interviews, voice memos, lectures. Reads burned-in video subtitles, otherwise transcribes speech. On-device, no cost. Takes a file path, not a URL. Use when asked to transcribe, quote or summarize a video or audio file already on this machine.
 ---
 
 # Video → transcript
